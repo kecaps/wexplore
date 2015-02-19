@@ -50,7 +50,11 @@ class WikiStreamer(object):
 
     def process_until(self, until=lambda: False):
         while not until():
-            self._client.process_once(0.2)
+            try:
+                self._client.process_once(0.2)
+            except UnicodeDecodeError as err:
+                logging.warning("Unicode error from irc: %s", err)
+
 
     def parse_message(self, channel: str, msg: str):
         m = RE_MESSAGE.match(msg)
@@ -60,7 +64,7 @@ class WikiStreamer(object):
         try:
             delta = int(re.search(r"[+-]\d+", groups[4]).group())
         except:
-            logging.warning("unable to parse delta string: %s", groups[4])
+            logging.debug("unable to parse delta string: %s", groups[4])
             delta = None
 
         # see if it looks like an anonymous edit
